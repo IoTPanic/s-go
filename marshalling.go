@@ -8,7 +8,7 @@ import (
 )
 
 func (h Header) Marshal() ([]byte, error) {
-	p := make([]byte, 4)
+	p := make([]byte, 5)
 	if h.Version > 7 {
 		return []byte{}, errors.New("Version too large")
 	}
@@ -26,6 +26,7 @@ func (h Header) Marshal() ([]byte, error) {
 	p[1] = h.NodeID
 	p[2] = h.SessionID
 	p[3] = h.Frame
+	p[4] = h.Fragment
 	return p, nil
 }
 
@@ -39,8 +40,8 @@ func (m Message) Marshal() ([]byte, error) {
 	mess := bytes.Buffer{}
 	if m.Header.Fragment == 0 {
 		size := make([]byte, 2)
-		size[1] = uint8(m.TransactionLength)
-		size[2] = uint8(m.TransactionLength >> 8)
+		size[0] = uint8(m.TransactionLength)
+		size[1] = uint8(m.TransactionLength >> 8)
 		mess.Write(size)
 	}
 	if m.Header.Compressed {

@@ -4,7 +4,7 @@
 
 ### Header
 
-The first byte of the header consists of a three bit version, a downstream flag, and a compressed flag, than a 3 bit type value. After that, a nodeID byte, session byte, and frame counter are passed to complete the header. After that, the rest of length is a part of a message that is not related to the header.
+The first byte of the header consists of a three bit version, a downstream flag, and a compressed flag, than a 3 bit type value. After that, a nodeID byte, session byte, frame counter, and fragment number are passed to complete the header. After that, the rest of length is a part of a message that is not related to the header.
 
 If the compression bit is set, the rest of the message has received brotli compression and requires decompression.
 

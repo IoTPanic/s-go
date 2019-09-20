@@ -1,6 +1,8 @@
 package s
 
-import "bytes"
+import (
+	"bytes"
+)
 
 const (
 	MessageTypeAck    = 0x0
@@ -9,20 +11,18 @@ const (
 
 const Version = 0x0
 
-const MaxFrameSize = 1499
-
 func CreateTransaction(pyld []byte, conn *Connection) ([][]byte, error) {
 	buf := bytes.NewBuffer(pyld)
 	var messages [][]byte
 	checksum := generateChecksum(pyld)
-
+	frag := 0
 	// Transaction will take multiple messages
-	for frag := 0; ; frag++ {
+	for {
 		var m Message
-		if frag == 0 {
-			m = Message{Header{true, conn.Compress, MessageTypeStream, Version, conn.ID, conn.SessionID, conn.LastFrame, uint8(frag)}, buf.Next(MaxFrameSize - 7), uint16(len(pyld)), checksum}
+		if frag == 0 { // TODO MOVE COMPRESSION  HERE TO FILL A PACKET TO MAX PAYLOAD DURING COMPRESSION INSTEAD OF JUST MAKING THE SAME CNT OF SMALLER PACKETS
+			m = Message{Header{true, conn.Compress, MessageTypeStream, Version, conn.ID, conn.SessionID, conn.LastFrame, uint8(frag)}, buf.Next(int(conn.MaximumPayload) - 7), uint16(len(pyld)), checksum}
 		} else {
-			m = Message{Header{true, conn.Compress, MessageTypeStream, Version, conn.ID, conn.SessionID, conn.LastFrame, uint8(frag)}, buf.Next(MaxFrameSize - 4), 0x0, 0x0}
+			m = Message{Header{true, conn.Compress, MessageTypeStream, Version, conn.ID, conn.SessionID, conn.LastFrame, uint8(frag)}, buf.Next(int(conn.MaximumPayload) - 4), 0x0, 0x0}
 		}
 		marshalled, err := m.Marshal()
 		if err != nil {
@@ -32,6 +32,7 @@ func CreateTransaction(pyld []byte, conn *Connection) ([][]byte, error) {
 		if buf.Len() == 0 {
 			break
 		}
+		frag++
 	}
 
 	conn.LastFrame++
